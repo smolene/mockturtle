@@ -140,10 +140,6 @@ private:
       return false;
     }
 
-    if (level_noncrit_mid >= level_top) {
-      return false;
-    }
-
     auto const noncrit_and = ntk.create_and(noncrit_root_mid, noncrit_mid_top);
     auto const crit_and = ntk.create_and(noncrit_and, crit_mid_top);
 
