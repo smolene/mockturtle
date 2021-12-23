@@ -22,8 +22,6 @@ namespace mockturtle {
 
 namespace detail {
 
-//using Ntk = depth_view<aig_network>;
-
 template <class Ntk> class aig_algebraic_rewriting_impl {
   using node = typename Ntk::node;
   using signal = typename Ntk::signal;
@@ -35,20 +33,20 @@ public:
 
   void run() {
     bool cont{true}; /* continue trying */
-    int counter = 0;
-    write_dot(ntk, "dot/input.dot");
+    //int counter = 0;
+    //write_dot(ntk, "dot/input.dot");
     while (cont) {
       cont = false; /* break the loop if no updates can be made */
       ntk.foreach_gate([&](node n) {
         if (try_algebraic_rules(n)) {
           ntk.update_levels();
           cont = true;
-          std::string filename = "dot/loop_";
-          filename += std::to_string(counter);
-          filename += ".dot";
+          //std::string filename = "dot/loop_";
+          //filename += std::to_string(counter);
+          //filename += ".dot";
           //write_dot(ntk, filename);
           //std::cout << "[[ loop ]] counter = " << counter << '\n';
-          counter++;
+          //counter++;
         }
       });
     }
@@ -61,11 +59,11 @@ private:
       return true;
     if (try_distributivity(n))
       return true;
-    /* TODO: add more rules here... */
 
     return false;
   }
 
+  // Returns a, b the two inputs and n the number of critical inputs. If any is critical, it is in a.
   std::tuple<int, signal, signal> critical_fanins(node n) {
     signal a, b;
     int count = 0;
@@ -109,13 +107,10 @@ private:
       return false;
     }
 
-    //std::cout << "[start] node = " << root << '\n';
-
     auto [count_root, crit_root_mid, noncrit_root_mid] = critical_fanins(root);
 
     // nothing to do, both paths are maxed out already.
     if (count_root != 1) {
-      //std::cout << "[rejected] count_root == " << count_root << '\n';
       return false;
     }
 
@@ -123,22 +118,14 @@ private:
     auto const noncrit_mid = ntk.get_node(noncrit_root_mid);
 
     if (ntk.is_pi(mid)) {
-      //std::cout << "[rejected] node is pi" << '\n';
       return false;
     }
 
     if (ntk.is_complemented(crit_root_mid)) {
-      //std::cout << "[rejected] signal is complemented" << '\n';
       return false;
     }
 
     auto [count_mid, crit_mid_top, noncrit_mid_top] = critical_fanins(mid);
-
-    // nothing to do, both paths are maxed out already
-    if (count_mid != 1) {
-      //std::cout << "[rejected] count_mid == " << count_mid << '\n';
-      //return false;
-    }
 
     auto const top = ntk.get_node(crit_mid_top);
     auto const noncrit_top = ntk.get_node(noncrit_mid_top);
@@ -150,12 +137,10 @@ private:
 
     auto const max = std::max({level_noncrit_mid + 1, level_noncrit_top + 1, level_top}) + 1;
     if (max >= level_root) {
-      //std::cout << "[rejected] max >= level_root: max: " << max << ", level_root: " << level_root << '\n';
       return false;
     }
 
     if (level_noncrit_mid >= level_top) {
-      //std::cout << "[rejected] level_noncrit_root_mid = " << level_noncrit_root_mid << " >= level_top = " << level_top << '\n';
       return false;
     }
 
@@ -163,21 +148,17 @@ private:
     auto const crit_and = ntk.create_and(noncrit_and, crit_mid_top);
 
     ntk.substitute_node(root, crit_and);
-  
-    //std::cout << "[accepted]" << '\n';
 
     return true;
   }
 
   /* Try the distributivity rule on node n. Return true if the network is updated. */
   bool try_distributivity(node n) {
-    /* TODO */
     return false;
   }
 
 private:
   Ntk& ntk;
-  // TODO
 };
 
 } // namespace detail
